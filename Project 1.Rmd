@@ -1,0 +1,145 @@
+---
+title: "Project 1"
+author: "Lin Miao"
+date: "2021/2/7"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r,echo=FALSE}
+library(dplyr)
+library(plyr)
+sparrow <- read.csv("C:/Users/windows/Desktop/New folder (3)/Statistics/STA 106/Rstu/data set/sparrow.csv")
+all.ave = aggregate(Weight ~ Treatment, data = sparrow, mean)
+all.ave
+all.ave = aggregate(Weight ~ Treatment, data = sparrow, sd)
+all.ave
+boxplot(Weight ~ Treatment, data = sparrow)
+
+
+
+c1=filter(sparrow,Treatment=="control")
+summary(c1)
+IQR1=15.50-12.90
+low1=12.90-1.5*IQR1
+low1
+CO1 = filter(sparrow,Treatment=="control" & Weight > low1)
+
+
+
+c2=filter(sparrow,Treatment=="enlarged")
+summary(c2)
+IQR2=15.10-12.70
+low2=12.70-1.5*IQR2
+low2
+CO2 = filter(sparrow,Treatment=="enlarged" & Weight > low2)
+
+
+
+c3=filter(sparrow,Treatment=="reduced")
+summary(c3)
+IQR3=16.70-15.43
+low3=15.5-1.5*IQR3
+low3
+CO3 = filter(sparrow,Treatment=="reduced" & Weight > low3)
+
+
+CO=rbind.fill(CO1,CO2,CO3)
+CO
+
+```
+
+```{r,echo=FALSE}
+the.model = lm(Weight~Treatment, data=CO)
+anova.table = anova(the.model)
+anova.table
+Fvalue = anova.table[1,4]
+Fvalue
+Pvalue = anova.table[1,5]
+Pvalue
+```
+```{r,echo=FALSE}
+group.means = by(CO$Weight,CO$Treatment,mean)
+group.nis = by(CO$Weight,CO$Treatment,length)
+MSE = anova(lm(Weight ~ Treatment, data = CO))[2,3]
+give.me.power = function(ybar,ni,MSE,alpha){
+a = length(ybar)
+nt = sum(ni)
+overall.mean = sum(ni*ybar)/nt
+phi = (1/sqrt(MSE))*sqrt( sum(ni*(ybar - overall.mean)^2)/a)
+phi.star = a *phi^2 
+Fc = qf(1-alpha,a-1,nt-a) 
+power = 1 - pf(Fc, a-1, nt-a, phi.star)
+return(power)
+}
+POW = give.me.power(group.means,group.nis,MSE,0.05)
+POW
+```
+```{r,echo=FALSE}
+give.me.CI = function(ybar,ni,ci,MSE,multiplier){
+if(sum(ci) != 0 & sum(ci !=0 ) != 1){
+return("Error - you did not input a valid contrast")
+} else if(length(ci) != length(ni)){
+return("Error - not enough contrasts given")
+}
+else{
+estimate = sum(ybar*ci)
+SE = sqrt(MSE*sum(ci^2/ni))
+CI = estimate + c(-1,1)*multiplier*SE
+result = c(estimate,CI)
+names(result) = c("Estimate","Lower Bound","Upper Bound")
+return(result)
+}
+}
+t.value = qt(1-0.05/2, sum(group.nis) - length(group.nis))
+ci.1 = c(0,0,1) 
+CI1 = give.me.CI(group.means,group.nis,ci.1,MSE,t.value)
+CI1
+```
+```{r,echo=FALSE}
+give.me.CI = function(ybar,ni,ci,MSE,multiplier){
+if(sum(ci) != 0 & sum(ci !=0 ) != 1){
+return("Error - you did not input a valid contrast")
+} else if(length(ci) != length(ni)){
+return("Error - not enough contrasts given")
+}
+else{
+estimate = sum(ybar*ci)
+SE = sqrt(MSE*sum(ci^2/ni))
+CI = estimate + c(-1,1)*multiplier*SE
+result = c(estimate,CI)
+names(result) = c("Estimate","Lower Bound","Upper Bound")
+return(result)
+}
+}
+t.value = qt(1-0.05/2, sum(group.nis) - length(group.nis))
+ci.2 = c(1,-1,0) 
+CI2 = give.me.CI(group.means,group.nis,ci.2,MSE,t.value)
+CI2
+```
+```{r,echo=FALSE}
+give.me.CI = function(ybar,ni,ci,MSE,multiplier){
+if(sum(ci) != 0 & sum(ci !=0 ) != 1){
+return("Error - you did not input a valid contrast")
+} else if(length(ci) != length(ni)){
+return("Error - not enough contrasts given")
+}
+else{
+estimate = sum(ybar*ci)
+SE = sqrt(MSE*sum(ci^2/ni))
+CI = estimate + c(-1,1)*multiplier*SE
+result = c(estimate,CI)
+names(result) = c("Estimate","Lower Bound","Upper Bound")
+return(result)
+}
+}
+t.value = qt(1-0.05/2, sum(group.nis) - length(group.nis))
+ci.3 = c(1,0,-1) 
+CI3 = give.me.CI(group.means,group.nis,ci.3,MSE,t.value)
+CI3
+```
+
+
